@@ -8,5 +8,7 @@
         public string UserName { get; set; } = null!;
         public string Password { get; set; } = null!;
         public decimal Balance { get; set; } = 0;
+        public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+
     }
 }

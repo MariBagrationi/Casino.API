@@ -72,6 +72,15 @@ namespace Casino.Application.Services
             
             user.Balance -= amount;
             await _userRepository.UpdateUserAsync(user, cancellationToken);
+
+            var transaction = new Transaction
+            {
+                UserId = user.Id,
+                Amount = -amount,
+                Date = DateTime.UtcNow,
+            };
+            user.Transactions.Add(transaction);
+
             return true; 
         }
     }

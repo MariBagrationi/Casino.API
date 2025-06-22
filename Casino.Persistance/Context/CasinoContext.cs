@@ -33,6 +33,19 @@ public partial class CasinoContext : DbContext
             entity.Property(e => e.UserName).HasMaxLength(50);
         });
 
+        modelBuilder.Entity<Transaction>(entity =>
+        {
+            entity.ToTable("Transaction");
+
+            entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Date).HasColumnType("datetime");
+
+            entity.HasOne(t => t.User)
+                .WithMany(u => u.Transactions)
+                .HasForeignKey(t => t.UserId);
+        });
+
+
         OnModelCreatingPartial(modelBuilder);
     }
 

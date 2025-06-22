@@ -2,7 +2,6 @@
 using Casino.API.Infrastructure.Validators;
 using Casino.Application.ModelsDTO;
 using Casino.Application.Services;
-using Casino.Domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -21,7 +20,14 @@ namespace Casino.API.Controllers
             _options = options;
         }
 
+        /// <summary>
+        /// Retrieves a user by their ID.
+        /// </summary>
+        /// <param name="id">User ID</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         [HttpGet("{id:int}")]
+        [ProducesResponseType(typeof(UserDTO), 200)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> GetUserById(int id, CancellationToken cancellationToken)
         {
             var user = await _userService.GetUsetById(id, cancellationToken);
@@ -32,7 +38,14 @@ namespace Casino.API.Controllers
             return Ok(user);
         }
 
+        /// <summary>
+        /// Registers a new user.
+        /// </summary>
+        /// <param name="user">User registration model</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         [HttpPost]
+        [ProducesResponseType(typeof(UserDTO), 201)]
+        [ProducesResponseType(400)]
         public async Task<IActionResult> CreateUser([FromBody] UserRegisterModel user, CancellationToken cancellationToken)
         {
             if (user == null)
@@ -50,7 +63,14 @@ namespace Casino.API.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
         }
 
+        /// <summary>
+        /// Authenticates a user and generates a JWT token.
+        /// </summary>
+        /// <param name="loginModel">Login credentials</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         [HttpPost("login")]
+        [ProducesResponseType(typeof(string), 200)]
+        [ProducesResponseType(401)]
         public async Task<IActionResult> Loging([FromBody] UserLoginModel loginModel, CancellationToken cancellationToken)
         {
             if (loginModel == null)
@@ -69,8 +89,15 @@ namespace Casino.API.Controllers
             return Ok(new { Token = token });
         }
 
+        /// <summary>
+        /// Retrieves the balance of a user.
+        /// </summary>
+        /// <param name="id">User ID</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         [Authorize(Roles = "User")]
         [HttpGet("{id:int}/balance")]
+        [ProducesResponseType(typeof(decimal), 200)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> GetUserBalance(int id, CancellationToken cancellationToken)
         {
             var balance = await _userService.GetUserBalance(id, cancellationToken);
@@ -81,8 +108,17 @@ namespace Casino.API.Controllers
             return Ok(new { Balance = balance });
         }
 
+        /// <summary>
+        /// Adds funds to a user's balance.
+        /// </summary>
+        /// <param name="id">User ID</param>
+        /// <param name="amount">Amount to add</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         [Authorize(Roles = "User")]
         [HttpPost("{id:int}/fill-balance")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> FillBalance(int id, [FromBody] decimal amount, CancellationToken cancellationToken)
         {
             if (amount <= 0)
@@ -98,8 +134,17 @@ namespace Casino.API.Controllers
             return Ok("Balance filled successfully.");
         }
 
+        /// <summary>
+        /// Withdraws funds from a user's balance.
+        /// </summary>
+        /// <param name="id">User ID</param>
+        /// <param name="amount">Amount to withdraw</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         [Authorize(Roles = "User")]
         [HttpPost("{id:int}/withdraw-balance")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> WithdrawBalance(int id, [FromBody] decimal amount, CancellationToken cancellationToken)
         {
             if (amount <= 0)

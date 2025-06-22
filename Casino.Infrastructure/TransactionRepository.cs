@@ -1,12 +1,13 @@
 ﻿using Casino.Domain.Models;
 using Casino.Domain.Repositories;
+using Casino.Persistance.Context;
 using Microsoft.EntityFrameworkCore;
 
 namespace Casino.Infrastructure
 {
     public class TransactionRepository : BaseRepository<Transaction>, ITransactionRepository
     {
-        public TransactionRepository(DbContext context) : base(context)
+        public TransactionRepository(CasinoContext context) : base(context)
         {
         }
 

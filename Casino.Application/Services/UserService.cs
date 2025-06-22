@@ -1,6 +1,7 @@
 ﻿using Casino.Application.ModelsDTO;
 using Casino.Application.Repositories;
 using Casino.Domain.Models;
+using Casino.Domain.Repositories;
 using Casino.Domain.Security;
 using Mapster;
 
@@ -9,9 +10,11 @@ namespace Casino.Application.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
-        public UserService(IUserRepository userRepository)
+        private readonly IUnitOfWork _unitOfWork;
+        public UserService(IUserRepository userRepository, IUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<UserDTO> AuthenticationAsync(string userName, string password, CancellationToken cancellationToken)
@@ -64,24 +67,37 @@ namespace Casino.Application.Services
             return user.Adapt<UserDTO>();
         }
 
-        public async Task<bool> WithdrawBalance(int id, decimal amount, CancellationToken cancellationToken)
+        public async Task<bool> WithdrawBalance(int userId, decimal amount, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetUserByIdAsync(id, cancellationToken);
-            if (user.Balance < amount)
-                return false; 
-            
-            user.Balance -= amount;
-            await _userRepository.UpdateUserAsync(user, cancellationToken);
+            using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
-            var transaction = new Transaction
+            var user = await _userRepository.GetUserByIdAsync(userId, cancellationToken);
+
+            if (user == null || user.Balance < amount)
+                return false;
+
+            try
             {
-                UserId = user.Id,
-                Amount = -amount,
-                Date = DateTime.UtcNow,
-            };
-            user.Transactions.Add(transaction);
+                user.Balance -= amount;
 
-            return true; 
+                var transactionEntity = new Transaction
+                {
+                    UserId = user.Id,
+                    Amount = -amount,
+                    Date = DateTime.UtcNow,
+                };
+
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return false;
+            }
+
+            return true;
         }
+
     }
 }

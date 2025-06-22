@@ -2,6 +2,7 @@ using Casino.API.Infrastructure.Extensions;
 using Casino.API.Infrastructure.JWT;
 using Casino.Application.Repositories;
 using Casino.Application.Services;
+using Casino.Domain.Repositories;
 using Casino.Infrastructure;
 using Casino.Persistance.Context;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,8 @@ namespace Casino
             // Add services to the container.
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             builder.Services.AddAuthentication();
             builder.Services.AddControllers();
